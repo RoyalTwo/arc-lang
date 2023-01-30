@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
     {
         input_file_lines.push_back(input_file_text);
     }
-    std::cout << tokenizeLine(input_file_lines[0]) << tokenizeLine(input_file_lines[1]);
+    std::cout << tokenizeLine(input_file_lines[0]);
+    std::cout << tokenizeLine(input_file_lines[1]);
 }
 
 std::ofstream createFile(std::string file_name)
@@ -48,7 +49,7 @@ std::string tokenizeLine(std::string line)
     std::string token_line;
 
     const std::vector<std::string> TYPES{"int", "string"};
-    const std::vector<std::string> OPERATORS{"+", "-", "=", "*", "/"};
+    const std::vector<std::string> OPERATORS{"+", "-", "=", "*", "/", "(", ")"};
     const std::vector<std::string> KEY_WORDS{"let"};
     const std::string NEW_LINE = "[newline]";
 
@@ -57,6 +58,18 @@ std::string tokenizeLine(std::string line)
     {
         std::string word;
         word = line.substr(0, line.find(" "));
+        if (word.find("(") != std::string::npos || word.find(")") != std::string::npos)
+        {
+            std::vector<std::string> parentheses_stuff = separateParentheses(word);
+            for (int i = 0; i < parentheses_stuff.size() - 1; i++)
+            {
+                if (parentheses_stuff[i].size() > 0)
+                {
+                    words.push_back(parentheses_stuff[i]);
+                }
+            }
+            word = parentheses_stuff[2];
+        }
         words.push_back(word);
         line.erase(0, line.find(" ") + 1);
     }
@@ -73,6 +86,8 @@ std::string tokenizeLine(std::string line)
     // otherwise it's an id
     for (auto i = words.begin(); i != words.end(); i++)
     {
+        if ((*i).size() == 0)
+            continue;
         std::string token;
 
         bool found = false;
@@ -120,4 +135,20 @@ std::string tokenizeLine(std::string line)
     token_line.append("[newline]\n");
 
     return token_line;
+}
+
+std::vector<std::string> separateParentheses(std::string word)
+{
+    std::string specific = word.find("(") != std::string::npos ? "(" : ")";
+    // take out before and after parenthese
+    // make it into own word
+    // push before parenthese
+    // push parenthese
+    std::string before = word.substr(0, word.find(specific));
+    word.erase(0, before.length());
+    std::string parenthese = word.substr(word.find(specific), word.find(specific) + 1);
+    word.erase(0, parenthese.length());
+
+    std::vector<std::string> output{before, parenthese, word};
+    return output;
 }
