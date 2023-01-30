@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     std::string input_file_name;
     std::string input_file_text;
     std::vector<std::string> input_file_lines;
+    std::vector<std::string> output_file_lines;
 
     if (argc > 1)
     {
@@ -26,8 +27,16 @@ int main(int argc, char *argv[])
     {
         input_file_lines.push_back(input_file_text);
     }
-    std::cout << tokenizeLine(input_file_lines[0]);
-    std::cout << tokenizeLine(input_file_lines[1]);
+
+    std::string output_file_name = input_file_name.append(".lexed");
+
+    std::ofstream output_file = createFile(output_file_name);
+
+    for (auto i = input_file_lines.begin(); i != input_file_lines.end(); i++)
+    {
+        std::string line_tokens = tokenizeLine(*i);
+        output_file << line_tokens;
+    }
 }
 
 std::ofstream createFile(std::string file_name)
@@ -44,13 +53,22 @@ std::ifstream openFile(std::string file_name)
 
 std::string tokenizeLine(std::string line)
 {
+    // this isn't an error
+    // if you run with c++20
+    if (line.starts_with("//"))
+    {
+        return "";
+    }
+
     std::vector<std::string> words;
     std::vector<std::string> tokens;
     std::string token_line;
 
+    // not error
+    // if you use c++20
     const std::vector<std::string> TYPES{"int", "string"};
-    const std::vector<std::string> OPERATORS{"+", "-", "=", "*", "/", "(", ")"};
-    const std::vector<std::string> KEY_WORDS{"let"};
+    const std::vector<std::string> OPERATORS{"+", "-", "=", "*", "/", "(", ")", "{", "}"};
+    const std::vector<std::string> KEY_WORDS{"let", "return", "fn"};
     const std::string NEW_LINE = "[newline]";
 
     // takes all but 1 word out
@@ -78,6 +96,18 @@ std::string tokenizeLine(std::string line)
     if (line.length() != 0)
     {
         std::string word = line.substr(0, line.length());
+        if (word.find("(") != std::string::npos || word.find(")") != std::string::npos)
+        {
+            std::vector<std::string> parentheses_stuff = separateParentheses(word);
+            for (int i = 0; i < parentheses_stuff.size() - 1; i++)
+            {
+                if (parentheses_stuff[i].size() > 0)
+                {
+                    words.push_back(parentheses_stuff[i]);
+                }
+            }
+            word = parentheses_stuff[parentheses_stuff.size() - 1];
+        }
         words.push_back(word);
     }
 
@@ -139,11 +169,20 @@ std::string tokenizeLine(std::string line)
 
 std::vector<std::string> separateParentheses(std::string word)
 {
+    if (word.find("(") != std::string::npos && word.find(")") != std::string::npos)
+    {
+        std::string before = word.substr(0, word.find("("));
+        word.erase(0, before.length());
+        std::string parenthese = word.substr(word.find("("), word.find("(") + 1);
+        word.erase(0, parenthese.length());
+        std::string between = word.substr(0, word.find(")"));
+        word.erase(0, between.length());
+        std::string last_parenthese = word;
+
+        std::vector<std::string> output{before, parenthese, between, last_parenthese};
+        return output;
+    }
     std::string specific = word.find("(") != std::string::npos ? "(" : ")";
-    // take out before and after parenthese
-    // make it into own word
-    // push before parenthese
-    // push parenthese
     std::string before = word.substr(0, word.find(specific));
     word.erase(0, before.length());
     std::string parenthese = word.substr(word.find(specific), word.find(specific) + 1);
