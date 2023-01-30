@@ -48,7 +48,7 @@ std::string tokenizeLine(std::string line)
     std::string token_line;
 
     const std::vector<std::string> TYPES{"int", "string"};
-    const std::vector<std::string> OPERATORS{"+", "-", "="};
+    const std::vector<std::string> OPERATORS{"+", "-", "=", "*", "/"};
     const std::vector<std::string> KEY_WORDS{"let"};
     const std::string NEW_LINE = "[newline]";
 
